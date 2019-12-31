@@ -5,7 +5,7 @@ const { keySecret } = require('../utils/config')
 const verifyToken = require('../utils/tokenYz')
 const User = require('../models/userModels')
 const Role = require('../models/roleModels')
-
+const Route = require('../models/routeModels')
 
 // 得到路由器对象config
 const router = express.Router()
@@ -28,7 +28,7 @@ router.post('/api/login', (req, res) => {
             Role.findOne({_id: user.role_id})
               .then(role => {
                 user._doc.role = role
-                res,send({
+                res.send({
                   token,
                   data: user,
                   message: '登陆成功',
@@ -65,14 +65,14 @@ router.get('/api/getUserAll', verifyToken, async (req, res) => {
 })
 
 // 更新用户
-router.post('/api/updateUser', verifyToken, (req, res) => {
+router.put('/api/updateUser', verifyToken, (req, res) => {
   const user = req.body
   User.findOneAndUpdate({_id: user._id}, user)
     .then(oldUser => {
       const data = Object.assign(oldUser, user)
       res.send({
         status: 1,
-        authData,
+        message: '修改成功',
         data
       })
     })
@@ -83,14 +83,13 @@ router.post('/api/updateUser', verifyToken, (req, res) => {
 })
 
 // 删除用户
-router.post('/api/deleteUser', verifyToken, (req, res) => {
+router.delete('/api/deleteUser', verifyToken, (req, res) => {
   const { userId } = req.body
   User.deleteOne({_id: userId})
     .then(doc => {
       res.send({
         status: 1, 
         message: '删除成功', 
-        authData
       })
     })
 })
@@ -140,7 +139,7 @@ router.post('/api/addRole', verifyToken, (req, res) => {
 })
 
 // 获取角色
-router.post('/api/addRole', verifyToken, (req, res) => {
+router.get('/api/getRoles', verifyToken, (req, res) => {
   Role.find()
     .then(roles => {
       res.send({status: 1, data: roles})
@@ -151,17 +150,95 @@ router.post('/api/addRole', verifyToken, (req, res) => {
     })
 })
 
-// 更新角色
+// 更新角色（设置权限）
 router.post('/api/updateRole', verifyToken, (req, res) => {
   const role = req.body
   role.auth_time = Date.now()
   Role.findOneAndUpdate({_id: role._id}, role)
     .then(oldRole => {
-      res.send({status: 1, data: {...oldRole._doc, role}})
+      res.send({status: 1, message: '更新成功', data: {...oldRole._doc, ...role}})
     })
     .catch(error => {
       console.error('更新角色异常', error)
       res.send({status: 0, message: '更新角色异常, 请重新尝试'})
+    })
+})
+
+// 路由
+// 添加路由
+router.post('/api/addRoute', verifyToken, (req, res) => {
+  const newRoute = req.body
+  Route.findOne({ parentName: newRoute.parentName })
+    .then(route => {
+      if (route) {
+        return new Promise((resolve, reject) => {
+          Route.findOneAndUpdate({_id: newRoute._id}, newRoute)
+          .then(oldRoute => {
+            const data = Object.assign(oldRoute, newRoute)
+            resolve(data)
+          })
+          .catch(error => {
+            reject(error)
+          })
+        })
+      } else {
+        Route.create({...req.body})
+      }
+    })
+    .then(route => {
+      res.send({
+        status: 1,
+        data: route,
+        message: '添加成功'
+      })
+    })
+    .catch(error => {
+      console.error('添加异常', error)
+      res.send({status: 0, message: '添加路由异常, 请重新尝试'})
+    })
+})
+
+// 获取route
+router.get('/api/getRoutes', verifyToken, (req, res) => {
+  Route.find().sort({ '_id': -1 })
+    .then(routes => {
+      res.send({status: 1, data: routes})
+    })
+    .catch(error => {
+      console.error('获取路由列表异常', error)
+      res.send({status: 0, message: '获取路由列表异常, 请重新尝试'})
+    })
+})
+
+router.put('/api/editRoute', verifyToken, (req, res) => {
+  const newRoute = req.body
+  Route.findOneAndUpdate({_id: newRoute._id}, newRoute)
+    .then(oldRoute => {
+      const data = Object.assign(oldRoute, newRoute)
+      res.send({
+        status: 1,
+        data: data,
+        message: '修改成功'
+      })
+    })
+    .catch(error => {
+      console.error('修改路由异常', error)
+      res.send({status: 0, message: '修改路由异常, 请重新尝试'})
+    })
+})
+
+router.delete('/api/deleteRoute', verifyToken, (req, res) => {
+  const { _id } = req.body
+  Route.deleteOne({_id})
+    .then(oldRoute => {
+      res.send({
+        status: 1,
+        message: '删除成功'
+      })
+    })
+    .catch(error => {
+      console.error('删除路由异常', error)
+      res.send({status: 0, message: '删除路由异常, 请重新尝试'})
     })
 })
 

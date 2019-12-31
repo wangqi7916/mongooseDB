@@ -7,15 +7,20 @@ const verifyToken = function (req, res, next) {
     const bearer = bearerHeader.split(' ')
     const bearerToken = bearer[1]
     req.token = bearerToken
-    jwt.verify(req.token, keySecret, async(err) => {
-      if (err) {
-        res.send({
-          status: 2,
-          message: 'token失效'
-        })
-      }
-    })
-    next()
+    try {
+      jwt.verify(req.token, keySecret, (err) => {
+        if (err) {
+          res.send({
+            status: 2,
+            message: 'token失效'
+          })
+        } else {
+          next()
+        }
+      })
+    } catch(err) {
+      console.log(err)
+    }
   } else {
     res.send({
       status: 2,

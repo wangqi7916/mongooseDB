@@ -8,7 +8,7 @@ const roleSchema = new mongoose.Schema({
   auth_time: Number,  // 授权时间
   create_time: { // 创建时间
     type: Number,
-    required: true
+    default: Date.now
   },
   menus: Array // 权限数组
 })

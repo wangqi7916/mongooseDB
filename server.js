@@ -10,7 +10,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Credentials",true)
   // 第二个参数表示允许跨域的域名，* 代表所有域名  
   res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS') // 允许的 http 请求的方法
+  res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS, DELETE') // 允许的 http 请求的方法
   // 允许前台获得的除 Cache-Control、Content-Language、Content-Type、Expires、Last-Modified、Pragma 这几张基本响应头之外的响应头
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
   if (req.method == 'OPTIONS') {
@@ -27,7 +27,7 @@ app.use(bodyParser.json());//无法演示 解析json数据依赖于urlencoded模
 const indexRouter = require('./routers')
 app.use('/', indexRouter)
 
-mongoose.connect('mongodb://127.0.0.1:27017/managePlatform', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb://127.0.0.1:27017/managePlatform', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
   .then(() => {
     console.log("数据库链接成功")
     app.listen(3000, function(){
